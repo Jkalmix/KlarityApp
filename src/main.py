@@ -1,5 +1,8 @@
 # src/main.py
-
+#pip install firebase_admin
+#pip install pillow
+#pip install pyrebase4
+#pip install firebase
 # =================================================================================
 # 1. IMPORTACIONES DE LIBRERÍAS
 # =================================================================================
@@ -23,7 +26,6 @@ import firebase_service
 # 2. DEFINICIÓN DE LA IDENTIDAD VISUAL
 # =================================================================================
 # Centralizar colores y fuentes hace que la aplicación sea fácil de mantener.
-# Si en el futuro decides cambiar el color principal, solo lo cambias aquí.
 # --- PALETA DE COLORES ---
 COLOR_PRINCIPAL_AZUL = "#2C3E50"  # Azul oscuro para fondos y elementos principales.
 COLOR_VERDE_CRECIMIENTO = "#2ECC71"  # Verde para botones de acción positiva (login, registro).
