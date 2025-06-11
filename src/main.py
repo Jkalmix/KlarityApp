@@ -1,4 +1,5 @@
 # src/main.py
+#pip install -r requirements.txt
 #pip install firebase_admin
 #pip install pillow
 #pip install pyrebase4
@@ -42,12 +43,13 @@ FONT_BOLD = ("Lato", 16, "bold")
 FONT_TITLE = ("Lato", 24, "bold")
 FONT_NORMAL = ("Lato", 12)
 FONT_SLOGAN = ("Lato", 14, "italic")
+FONT_MENU = ("Lato", 14)
 
 # =================================================================================
 # 3. CONSTANTES Y VARIABLES GLOBALES
 # =================================================================================
 # El slogan se define aquí para que sea fácil de cambiar.
-SLOGAN_APP = "Finanzas claras, Futuro Seguro.."
+SLOGAN_APP = "Finanzas claras, Futuro Seguro."
 
 # --- VENTANA RAÍZ (ROOT) ---
 # tk.Tk() crea la ventana principal que actúa como la base de toda la aplicación.
@@ -75,6 +77,9 @@ password_registro_entry = None
 confirm_password_entry = None
 show_password_registro_var = None # Variable para el Checkbutton de mostrar/ocultar contraseña en registro
 show_confirm_password_registro_var = None # Variable para el Checkbutton de mostrar/ocultar confirmar contraseña en registro
+
+# Variable global para esta nueva ventana
+auth_landing_window = None # Variable para la pantalla principal de autenticación
 
 # Variable global para almacenar el objeto del usuario actualmente logueado en Firebase.
 # `None` significa que no hay nadie logueado. Contendrá el diccionario de usuario de Pyrebase
@@ -203,9 +208,219 @@ def toggle_password_visibility(password_entry_widget, check_button_var):
 
 def mostrar_home():
     """
-    Crea y muestra la ventana principal (Dashboard) de la aplicación.
-    Contiene opciones para transacciones, perfil, etc.
+    Crea y muestra la ventana principal (Dashboard) de la aplicación 'Klarity'.
+    Esta ventana está diseñada con un menú de navegación lateral y un área de contenido principal
+    que se actualiza dinámicamente al seleccionar opciones del menú.
+
+    Estructura de la ventana:
+    - Un Frame lateral izquierdo para el menú de navegación (COLOR_PRINCIPAL_AZUL).
+    - Un Frame principal a la derecha para mostrar el contenido de cada sección (COLOR_FONDO_GRIS).
+
+    Funcionalidades:
+    - Saludo personalizado al usuario logueado.
+    - Botones en el menú lateral para navegar entre "Dashboard", "Transacciones",
+      "Categorías", "Reportes" y "Perfil".
+    - Un botón "Cerrar Sesión" en la parte inferior del menú lateral.
+    - El área de contenido principal se actualiza llamando a funciones específicas
+      (ej. `mostrar_dashboard_contenido`, `mostrar_transacciones`).
+    - Manejo del logo de la aplicación.
     """
+    global home_window, frame_contenido # Se declaran como globales para poder acceder a ellas.
+                                      # 'frame_contenido' es crucial para cambiar el contenido.
+
+    home_window = tk.Toplevel(root)
+    home_window.title("Klarity - Dashboard")
+    home_window.geometry("1000x700")  # Aumentamos el tamaño para una mejor distribución de elementos.
+    home_window.configure(bg=COLOR_FONDO_GRIS)
+    home_window.resizable(True, True) # Permitir redimensionar la ventana si se desea.
+
+    # 1. Crear el Frame para el menú lateral (izquierda)
+    frame_menu_lateral = tk.Frame(home_window, bg=COLOR_PRINCIPAL_AZUL, width=220)
+    # 'side="left"' lo ancla a la izquierda. 'fill="y"' hace que se expanda verticalmente.
+    frame_menu_lateral.pack(side="left", fill="y")
+    # 'pack_propagate(False)' evita que el frame se encoja o expanda para ajustarse a sus contenidos,
+    # manteniendo el 'width' fijo.
+    frame_menu_lateral.pack_propagate(False)
+
+    # 2. Crear el Frame para el contenido principal (derecha)
+    frame_contenido = tk.Frame(home_window, bg=COLOR_FONDO_GRIS)
+    # 'side="right"' lo ancla a la derecha (ocupando el espacio restante).
+    # 'fill="both"' lo expande tanto horizontal como verticalmente.
+    # 'expand=True' hace que ocupe todo el espacio disponible al redimensionar la ventana.
+    frame_contenido.pack(side="right", fill="both", expand=True)
+
+    # --- Contenido del Menú Lateral ---
+
+    # Logo o nombre de la aplicación en la parte superior del menú
+    try:
+        # Carga y redimensiona el logo. Asegúrate de tener 'assets/klarity_logo.png'.
+        logo_menu_image = Image.open("assets/klarity_logo.png").resize((80, 80), Image.Resampling.LANCZOS)
+        logo_menu_photo = ImageTk.PhotoImage(logo_menu_image)
+        label_logo_menu = tk.Label(frame_menu_lateral, image=logo_menu_photo, bg=COLOR_PRINCIPAL_AZUL)
+        label_logo_menu.image = logo_menu_photo # Importante para evitar que la imagen sea eliminada por el garbage collector.
+        label_logo_menu.pack(pady=(20, 10))
+    except FileNotFoundError:
+        # Alternativa si el logo no se encuentra.
+        tk.Label(frame_menu_lateral, text="Klarity", font=FONT_BOLD, fg=COLOR_BLANCO, bg=COLOR_PRINCIPAL_AZUL).pack(pady=(20, 10))
+
+    # Título "Menú"
+    tk.Label(frame_menu_lateral, text="Menú", font=FONT_BOLD, bg=COLOR_PRINCIPAL_AZUL, fg=COLOR_BLANCO).pack(pady=(0, 20))
+
+    # Botones de navegación del menú lateral
+    # Cada botón llama a una función que se encargará de actualizar el 'frame_contenido'.
+    # Se usa 'lambda' para pasar un comando sin ejecutarlo inmediatamente.
+    tk.Button(frame_menu_lateral, text="Dashboard", font=FONT_MENU, bg=COLOR_PRINCIPAL_AZUL, fg=COLOR_BLANCO,
+              command=mostrar_dashboard_contenido, # Llama a la función para cargar el contenido del Dashboard
+              relief="flat", padx=10, pady=10, anchor="w").pack(fill="x", pady=5) # 'anchor="w"' alinea el texto a la izquierda, 'fill="x"' expande el botón horizontalmente.
+
+    tk.Button(frame_menu_lateral, text="Transacciones", font=FONT_MENU, bg=COLOR_PRINCIPAL_AZUL, fg=COLOR_BLANCO,
+              command=mostrar_transacciones, # Llama a la función para cargar el contenido de Transacciones
+              relief="flat", padx=10, pady=10, anchor="w").pack(fill="x", pady=5)
+
+    tk.Button(frame_menu_lateral, text="Categorías", font=FONT_MENU, bg=COLOR_PRINCIPAL_AZUL, fg=COLOR_BLANCO,
+              command=mostrar_categorias, # Llama a la función para cargar el contenido de Categorías
+              relief="flat", padx=10, pady=10, anchor="w").pack(fill="x", pady=5)
+
+    tk.Button(frame_menu_lateral, text="Reportes", font=FONT_MENU, bg=COLOR_PRINCIPAL_AZUL, fg=COLOR_BLANCO,
+              command=mostrar_reportes, # Llama a la función para cargar el contenido de Reportes
+              relief="flat", padx=10, pady=10, anchor="w").pack(fill="x", pady=5)
+
+    tk.Button(frame_menu_lateral, text="Perfil", font=FONT_MENU, bg=COLOR_PRINCIPAL_AZUL, fg=COLOR_BLANCO,
+              command=mostrar_perfil, # Llama a la función para cargar el contenido del Perfil
+              relief="flat", padx=10, pady=10, anchor="w").pack(fill="x", pady=5)
+
+    # Botón para cerrar sesión (anclado a la parte inferior del menú lateral)
+    tk.Button(frame_menu_lateral, text="Cerrar Sesión", font=FONT_NORMAL, bg=COLOR_ROJO_GASTO, fg=COLOR_BLANCO,
+              command=cerrar_sesion, relief="flat", padx=10, pady=5).pack(side="bottom", fill="x", pady=20, padx=10)
+
+    # --- Contenido Inicial del Dashboard ---
+    # Al abrir la ventana Home, se muestra el contenido del Dashboard por defecto.
+    mostrar_dashboard_contenido()
+
+    # Protocolo para manejar el cierre de la ventana con la 'X'. Termina la aplicación principal.
+    home_window.protocol("WM_DELETE_WINDOW", root.destroy)
+
+# =================================================================================
+# Funciones para el contenido dinámico del 'frame_contenido'
+# Estas funciones DEBEN ser definidas antes de 'mostrar_home' o en la sección
+# de "FUNCIONES DE LÓGICA DE LA APLICACIÓN" de tu main.py.
+# =================================================================================
+
+# Global para el frame de contenido, para que las funciones lo puedan limpiar.
+# Asegúrate de que esta variable 'frame_contenido' esté declarada como global en tu archivo main.py
+# (por ejemplo, justo debajo de 'home_window = None').
+# global frame_contenido
+# frame_contenido = None # Inicialmente a None
+
+def mostrar_dashboard_contenido():
+    """
+    Carga el contenido de la sección 'Dashboard' en el frame principal.
+    Simula una vista general con un saludo y un mensaje. Aquí irían los gráficos.
+    """
+    # Limpia cualquier widget existente en el frame de contenido antes de cargar el nuevo.
+    for widget in frame_contenido.winfo_children():
+        widget.destroy()
+
+    # Contenido del Dashboard
+    user_email = current_user['email'] if current_user else "Usuario"
+    tk.Label(frame_contenido, text=f"¡Bienvenido/a a tu Dashboard, {user_email}!", font=FONT_TITLE, bg=COLOR_FONDO_GRIS, fg=COLOR_PRINCIPAL_AZUL).pack(pady=20)
+    tk.Label(frame_contenido, text="Aquí verás tus gráficos y resúmenes de finanzas.", font=FONT_NORMAL, bg=COLOR_FONDO_GRIS, fg=COLOR_TEXTO_GRIS).pack(pady=10)
+    # Aquí es donde integrarías librerías de gráficos si las tuvieras (ej. Matplotlib).
+    tk.Label(frame_contenido, text="(Espacio para gráficos de saldo, gastos por categoría, etc.)", font=FONT_NORMAL, bg=COLOR_FONDO_GRIS, fg=COLOR_TEXTO_GRIS).pack(pady=50)
+
+
+def mostrar_transacciones():
+    """
+    Carga el contenido de la sección 'Transacciones' en el frame principal.
+    Simula un formulario para registrar nuevas transacciones y una lista.
+    """
+    for widget in frame_contenido.winfo_children():
+        widget.destroy()
+
+    tk.Label(frame_contenido, text="Registrar y Ver Transacciones", font=FONT_TITLE, bg=COLOR_FONDO_GRIS, fg=COLOR_PRINCIPAL_AZUL).pack(pady=20)
+
+    # Frame para el formulario de nueva transacción
+    form_frame = tk.LabelFrame(frame_contenido, text="Nueva Transacción", font=FONT_BOLD, bg=COLOR_FONDO_GRIS, fg=COLOR_TEXTO_GRIS, padx=20, pady=10)
+    form_frame.pack(pady=10, padx=20, fill="x")
+
+    tk.Label(form_frame, text="Descripción:", font=FONT_NORMAL, bg=COLOR_FONDO_GRIS, fg=COLOR_TEXTO_GRIS).grid(row=0, column=0, sticky="w", pady=5, padx=5)
+    tk.Entry(form_frame, width=40, font=FONT_NORMAL, relief="flat", highlightbackground=COLOR_TEXTO_GRIS, highlightthickness=1).grid(row=0, column=1, pady=5, padx=5)
+
+    tk.Label(form_frame, text="Monto:", font=FONT_NORMAL, bg=COLOR_FONDO_GRIS, fg=COLOR_TEXTO_GRIS).grid(row=1, column=0, sticky="w", pady=5, padx=5)
+    tk.Entry(form_frame, width=40, font=FONT_NORMAL, relief="flat", highlightbackground=COLOR_TEXTO_GRIS, highlightthickness=1).grid(row=1, column=1, pady=5, padx=5)
+
+    tk.Label(form_frame, text="Tipo (Ingreso/Gasto):", font=FONT_NORMAL, bg=COLOR_FONDO_GRIS, fg=COLOR_TEXTO_GRIS).grid(row=2, column=0, sticky="w", pady=5, padx=5)
+    tipo_transaccion_var = tk.StringVar(value="Gasto") # Valor por defecto
+    ttk.Radiobutton(form_frame, text="Ingreso", variable=tipo_transaccion_var, value="Ingreso", style="TRadiobutton").grid(row=2, column=1, sticky="w")
+    ttk.Radiobutton(form_frame, text="Gasto", variable=tipo_transaccion_var, value="Gasto", style="TRadiobutton").grid(row=3, column=1, sticky="w")
+
+    tk.Button(form_frame, text="Guardar Transacción", font=FONT_NORMAL, bg=COLOR_VERDE_CRECIMIENTO, fg=COLOR_BLANCO, relief="flat", padx=10, pady=5).grid(row=4, columnspan=2, pady=15)
+
+    # Espacio para la lista de transacciones (placeholder)
+    tk.Label(frame_contenido, text="\n--- Lista de Transacciones Recientes ---\n", font=FONT_BOLD, bg=COLOR_FONDO_GRIS, fg=COLOR_TEXTO_GRIS).pack(pady=10)
+    tk.Label(frame_contenido, text="Aquí se mostrarían tus transacciones en una tabla (ej. usando ttk.Treeview).", font=FONT_NORMAL, bg=COLOR_FONDO_GRIS, fg=COLOR_TEXTO_GRIS).pack(pady=5)
+
+
+def mostrar_categorias():
+    """
+    Carga el contenido de la sección 'Categorías' en el frame principal.
+    Aquí iría la lógica para añadir, editar o eliminar categorías.
+    """
+    for widget in frame_contenido.winfo_children():
+        widget.destroy()
+
+    tk.Label(frame_contenido, text="Gestión de Categorías", font=FONT_TITLE, bg=COLOR_FONDO_GRIS, fg=COLOR_PRINCIPAL_AZUL).pack(pady=20)
+    tk.Label(frame_contenido, text="Aquí podrás añadir, editar o eliminar tus categorías de ingresos y gastos.", font=FONT_NORMAL, bg=COLOR_FONDO_GRIS, fg=COLOR_TEXTO_GRIS).pack(pady=10)
+    # Ejemplos de elementos para esta sección
+    tk.Button(frame_contenido, text="Añadir Nueva Categoría", font=FONT_NORMAL, bg=COLOR_VERDE_CRECIMIENTO, fg=COLOR_BLANCO, relief="flat", padx=10, pady=5).pack(pady=10)
+    tk.Label(frame_contenido, text="\n--- Tus Categorías Actuales ---\n", font=FONT_BOLD, bg=COLOR_FONDO_GRIS, fg=COLOR_TEXTO_GRIS).pack(pady=10)
+    tk.Label(frame_contenido, text=" - Alimentos", font=FONT_NORMAL, bg=COLOR_FONDO_GRIS, fg=COLOR_TEXTO_GRIS).pack(anchor="w", padx=50)
+    tk.Label(frame_contenido, text=" - Transporte", font=FONT_NORMAL, bg=COLOR_FONDO_GRIS, fg=COLOR_TEXTO_GRIS).pack(anchor="w", padx=50)
+    tk.Label(frame_contenido, text=" - Salario", font=FONT_NORMAL, bg=COLOR_FONDO_GRIS, fg=COLOR_TEXTO_GRIS).pack(anchor="w", padx=50)
+
+
+def mostrar_reportes():
+    """
+    Carga el contenido de la sección 'Reportes y Análisis' en el frame principal.
+    Aquí se mostrarían diferentes tipos de reportes financieros.
+    """
+    for widget in frame_contenido.winfo_children():
+        widget.destroy()
+
+    tk.Label(frame_contenido, text="Reportes y Análisis", font=FONT_TITLE, bg=COLOR_FONDO_GRIS, fg=COLOR_PRINCIPAL_AZUL).pack(pady=20)
+    tk.Label(frame_contenido, text="Genera reportes detallados y visualiza el estado de tus finanzas.", font=FONT_NORMAL, bg=COLOR_FONDO_GRIS, fg=COLOR_TEXTO_GRIS).pack(pady=10)
+    # Ejemplos de opciones de reportes
+    tk.Button(frame_contenido, text="Reporte de Gastos Mensual", font=FONT_NORMAL, bg=COLOR_PRINCIPAL_AZUL, fg=COLOR_BLANCO, relief="flat", padx=10, pady=5).pack(pady=5)
+    tk.Button(frame_contenido, text="Flujo de Caja Anual", font=FONT_NORMAL, bg=COLOR_PRINCIPAL_AZUL, fg=COLOR_BLANCO, relief="flat", padx=10, pady=5).pack(pady=5)
+    tk.Button(frame_contenido, text="Balance de Activos", font=FONT_NORMAL, bg=COLOR_PRINCIPAL_AZUL, fg=COLOR_BLANCO, relief="flat", padx=10, pady=5).pack(pady=5)
+
+
+def mostrar_perfil():
+    """
+    Carga el contenido de la sección 'Perfil' en el frame principal.
+    Permite al usuario ver y editar su información personal.
+    """
+    for widget in frame_contenido.winfo_children():
+        widget.destroy()
+
+    tk.Label(frame_contenido, text="Mi Perfil", font=FONT_TITLE, bg=COLOR_FONDO_GRIS, fg=COLOR_PRINCIPAL_AZUL).pack(pady=20)
+    tk.Label(frame_contenido, text="Aquí podrás ver y editar tu información personal.", font=FONT_NORMAL, bg=COLOR_FONDO_GRIS, fg=COLOR_TEXTO_GRIS).pack(pady=10)
+
+    # Mostrar información del usuario
+    user_email = current_user['email'] if current_user else "N/A"
+    tk.Label(frame_contenido, text=f"Email: {user_email}", font=FONT_NORMAL, bg=COLOR_FONDO_GRIS, fg=COLOR_TEXTO_GRIS).pack(pady=5)
+    tk.Label(frame_contenido, text="Nombre: [Nombre del usuario]", font=FONT_NORMAL, bg=COLOR_FONDO_GRIS, fg=COLOR_TEXTO_GRIS).pack(pady=5)
+    # Ejemplo de un campo para editar el nombre
+    tk.Label(frame_contenido, text="Nuevo Nombre:", font=FONT_NORMAL, bg=COLOR_FONDO_GRIS, fg=COLOR_TEXTO_GRIS).pack(pady=(15, 5))
+    tk.Entry(frame_contenido, width=35, font=FONT_NORMAL, relief="flat", highlightbackground=COLOR_TEXTO_GRIS, highlightthickness=1).pack()
+    tk.Button(frame_contenido, text="Actualizar Perfil", font=FONT_NORMAL, bg=COLOR_VERDE_CRECIMIENTO, fg=COLOR_BLANCO, relief="flat", padx=10, pady=5).pack(pady=15)
+
+"""""
+def mostrar_home():
+    """
+    #Crea y muestra la ventana principal (Dashboard) de la aplicación.
+    #Contiene opciones para transacciones, perfil, etc.
+"""
     global home_window # Declaramos que vamos a modificar la variable global home_window
     home_window = tk.Toplevel(root)
     home_window.title("Klarity - Dashboard")
@@ -232,7 +447,7 @@ def mostrar_home():
 
     # Protocolo para manejar el cierre de la ventana con la 'X'. Termina la aplicación principal.
     home_window.protocol("WM_DELETE_WINDOW", root.destroy)
-
+"""
 def mostrar_registro_window():
     """Crea y muestra la ventana de Registro de nuevo usuario con opción de mostrar/ocultar contraseña."""
     global registro_window, nombre_entry, email_registro_entry, password_registro_entry, confirm_password_entry, show_password_registro_var, show_confirm_password_registro_var
@@ -363,7 +578,7 @@ def mostrar_slogan_window():
      # .after() espera un tiempo en milisegundos y luego ejecuta una función.
     # Aquí, espera 2.5 segundos, luego destruye la ventana del slogan y muestra la de login.
     # La 'lambda' permite ejecutar múltiples comandos en una sola llamada.
-    slogan_window.after(2500, lambda: [slogan_window.destroy(), mostrar_login_window()])
+    slogan_window.after(2500, lambda: [slogan_window.destroy(), mostrar_login_window(),])
 
 def iniciar_splash_screen():
     """Crea y gestiona la pantalla de carga inicial (Splash Screen)."""
