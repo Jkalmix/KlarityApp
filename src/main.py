@@ -20,7 +20,7 @@ import os  # Necesario para clear_screen si lo usas (aunque en GUI no es común,
 import time # Necesario para timestamps (fecha de registro)
 
 # IMPORTACIÓN CLAVE: Importamos el módulo que maneja las interacciones con Firebase.
-# Asegúrate de que 'firebase_service.py' esté en el mismo directorio 'src'.
+#  'firebase_service.py' esta en el mismo directorio 'src'.
 import firebase_service
 
 # =================================================================================
@@ -59,8 +59,7 @@ root = tk.Tk()
 root.withdraw()
 
 # Definimos variables globales para las ventanas y widgets. Esto nos permite
-# acceder a ellos desde diferentes funciones (por ejemplo, para leer un campo
-# de texto o para cerrar una ventana).
+# acceder a ellos desde diferentes funciones 
 login_window = None
 home_window = None
 registro_window = None # Ventana para el registro.
@@ -93,7 +92,7 @@ current_user = None
 def intentar_login():
     """
     Función que maneja el intento de inicio de sesión del usuario.
-    Ahora utiliza la función `firebase_service.login_user` para autenticarse con Firebase.
+    Utiliza la función `firebase_service.login_user` para autenticarse con Firebase.
     """
     global current_user 
 
@@ -108,17 +107,17 @@ def intentar_login():
     # --- INTEGRACIÓN CON FIREBASE SERVICE ---
     # Llama a la función de login del módulo firebase_service.
     # Esta función devuelve el objeto de usuario y un mensaje de error (si lo hay).
-    user, error = firebase_service.login_user(email, password) # <--- CAMBIO CLAVE AQUÍ
+    user, error = firebase_service.login_user(email, password)
 
     if user:
         # Si el login es exitoso, almacenamos el objeto de usuario.
-        current_user = user # <--- AÑADIR ESTA LÍNEA
-        messagebox.showinfo("Login Exitoso", f"¡Bienvenido/a a Klarity, {current_user['email']}!", parent=login_window) # <--- CAMBIAR EL MENSAJE
+        current_user = user 
+        messagebox.showinfo("Login Exitoso", f"¡Bienvenido/a a Klarity, {current_user['email']}!", parent=login_window) # 
         login_window.destroy()  # Cierra la ventana de login.
         mostrar_home()          # Abre la pantalla principal de la aplicación.
     else:
         # Si hay un error, lo mostramos en un messagebox.
-        messagebox.showerror("Error de Login", error, parent=login_window) # <--- CAMBIO CLAVE AQUÍ
+        messagebox.showerror("Error de Login", error, parent=login_window) 
 
 def intentar_registro():
     """
@@ -143,31 +142,31 @@ def intentar_registro():
         return
 
     # También puedes añadir validación de formato de email o longitud de contraseña aquí antes de enviar a Firebase.
-    if len(password) < 6: # <--- AÑADIR ESTA VALIDACIÓN
+    if len(password) < 6: 
         messagebox.showerror("Error de Registro", "La contraseña debe tener al menos 6 caracteres.", parent=registro_window)
         return
 
 
     # --- INTEGRACIÓN CON FIREBASE SERVICE ---
     # Llama a la función de registro de usuario en Firebase Authentication.
-    user, error = firebase_service.register_user(email, password) # <--- CAMBIO CLAVE AQUÍ
+    user, error = firebase_service.register_user(email, password)
 
     if user:
         # Si el registro en Auth es exitoso, logueamos al usuario automáticamente
         # y creamos un perfil inicial en Realtime Database.
-        current_user = user # <--- AÑADIR ESTA LÍNEA
-        messagebox.showinfo("Registro Exitoso", "¡Tu cuenta ha sido creada y has iniciado sesión!", parent=registro_window) # <--- CAMBIAR EL MENSAJE
+        current_user = user 
+        messagebox.showinfo("Registro Exitoso", "¡Tu cuenta ha sido creada y has iniciado sesión!", parent=registro_window)
 
         # Datos iniciales para el perfil del usuario en Realtime Database
-        profile_data = { # <--- AÑADIR ESTE BLOQUE
+        profile_data = { 
             "email": user['email'],
             "nombre": nombre, # Usamos el nombre que el usuario proporcionó
             "saldo_inicial": 0.0, # Saldo inicial por defecto
             "fecha_registro": time.time() # Añadimos un timestamp de registro
         }
         # Crea el perfil en la base de datos usando el UID del usuario.
-        profile_success, profile_msg = firebase_service.create_user_profile(user['localId'], profile_data) # <--- AÑADIR ESTA LÍNEA
-        if profile_success: # <--- AÑADIR ESTE BLOQUE
+        profile_success, profile_msg = firebase_service.create_user_profile(user['localId'], profile_data) 
+        if profile_success: 
             print(f"Perfil de usuario creado en DB: {profile_msg}")
         else:
             print(f"Error al crear perfil en DB: {profile_msg}")
@@ -177,18 +176,18 @@ def intentar_registro():
         mostrar_home()            # Mostramos la ventana principal.
     else:
         # Si hay un error durante el registro en Auth, lo mostramos.
-        messagebox.showerror("Error de Registro", error, parent=registro_window) # <--- CAMBIO CLAVE AQUÍ
+        messagebox.showerror("Error de Registro", error, parent=registro_window)
 
 def cerrar_sesion():
     """
     Función para el botón "Cerrar Sesión" en la ventana Home.
     Limpia el usuario actual y redirige a la ventana de login.
     """
-    global current_user # <--- AÑADIR ESTA LÍNEA
-    current_user = None # Desvincula al usuario de la sesión actual. # <--- AÑADIR ESTA LÍNEA
+    global current_user
+    current_user = None # Desvincula al usuario de la sesión actual.
     home_window.destroy() # Cierra la ventana principal (Home).
     mostrar_login_window() # Muestra la ventana de login.
-    messagebox.showinfo("Sesión Cerrada", "Has cerrado sesión correctamente.") # <--- OPCIONAL: AÑADIR ESTE MENSAJE
+    messagebox.showinfo("Sesión Cerrada", "Has cerrado sesión correctamente.")
 
 def toggle_password_visibility(password_entry_widget, check_button_var):
     """
@@ -226,24 +225,33 @@ def mostrar_home():
     - Manejo del logo de la aplicación.
     """
     global home_window, frame_contenido # Se declaran como globales para poder acceder a ellas.
-                                      # 'frame_contenido' es crucial para cambiar el contenido.
+    #'frame_contenido' es crucial para cambiar el contenido.
 
     home_window = tk.Toplevel(root)
     home_window.title("Klarity - Dashboard")
-    home_window.geometry("1000x700")  # Aumentamos el tamaño para una mejor distribución de elementos.
+    home_window.geometry("1024x720")  # Aumentamos el tamaño para una mejor distribución de elementos.
     home_window.configure(bg=COLOR_FONDO_GRIS)
     home_window.resizable(True, True) # Permitir redimensionar la ventana si se desea.
 
-    # 1. Crear el Frame para el menú lateral (izquierda)
+    # 1. Crear el Frame para el menú lateral (izquierda),
+    # tk.Frame(): Crea un widget Frame, que es un contenedor rectangular que se usa para organizar otros widgets.
+    # (home_window, ...): Indica que frame_menu_lateral es un hijo de home_window
     frame_menu_lateral = tk.Frame(home_window, bg=COLOR_PRINCIPAL_AZUL, width=220)
+
+    # .pack(): Es uno de los gestores de geometría de Tkinter.
+    # Organiza los widgets en bloques antes de colocarlos en el widget padre.
     # 'side="left"' lo ancla a la izquierda. 'fill="y"' hace que se expanda verticalmente.
     frame_menu_lateral.pack(side="left", fill="y")
+
     # 'pack_propagate(False)' evita que el frame se encoja o expanda para ajustarse a sus contenidos,
+    #Por defecto, un Frame se encogerá o expandirá para ajustarse a sus widgets hijos.
     # manteniendo el 'width' fijo.
+    # False para que no ajuste su tamaño basándose en sus hijos, sino que mantenga su tamaño
     frame_menu_lateral.pack_propagate(False)
 
-    # 2. Crear el Frame para el contenido principal (derecha)
+    # 2. Crear el Frame para el contenido principal (derecha) tk.Frame(home_window, ...): Es hijo de home_window.
     frame_contenido = tk.Frame(home_window, bg=COLOR_FONDO_GRIS)
+    # .pack(): Empaqueta este frame.
     # 'side="right"' lo ancla a la derecha (ocupando el espacio restante).
     # 'fill="both"' lo expande tanto horizontal como verticalmente.
     # 'expand=True' hace que ocupe todo el espacio disponible al redimensionar la ventana.
@@ -252,10 +260,11 @@ def mostrar_home():
     # --- Contenido del Menú Lateral ---
 
     # Logo o nombre de la aplicación en la parte superior del menú
-    try:
-        # Carga y redimensiona el logo. Asegúrate de tener 'assets/klarity_logo.png'.
+    try: # si el archivo del logo no se encuentra), entonces ejecuta el código dentro del bloque except
+        # Carga y redimensiona el logo 'assets/klarity_logo.png'.
         logo_menu_image = Image.open("assets/klarity_logo.png").resize((80, 80), Image.Resampling.LANCZOS)
         logo_menu_photo = ImageTk.PhotoImage(logo_menu_image)
+        #tk.Label(): Crea un widget de etiqueta. (frame_menu_lateral, ...): Es hijo del frame del menú lateral.
         label_logo_menu = tk.Label(frame_menu_lateral, image=logo_menu_photo, bg=COLOR_PRINCIPAL_AZUL)
         label_logo_menu.image = logo_menu_photo # Importante para evitar que la imagen sea eliminada por el garbage collector.
         label_logo_menu.pack(pady=(20, 10))
@@ -269,13 +278,13 @@ def mostrar_home():
     # Botones de navegación del menú lateral
     # Cada botón llama a una función que se encargará de actualizar el 'frame_contenido'.
     # Se usa 'lambda' para pasar un comando sin ejecutarlo inmediatamente.
-    tk.Button(frame_menu_lateral, text="Dashboard", font=FONT_MENU, bg=COLOR_PRINCIPAL_AZUL, fg=COLOR_BLANCO,
+    tk.Button(frame_menu_lateral, text="Dashboard", font=FONT_MENU, bg=COLOR_VERDE_CRECIMIENTO, fg=COLOR_BLANCO,
               command=mostrar_dashboard_contenido, # Llama a la función para cargar el contenido del Dashboard
               relief="flat", padx=10, pady=10, anchor="w").pack(fill="x", pady=5) # 'anchor="w"' alinea el texto a la izquierda, 'fill="x"' expande el botón horizontalmente.
 
     tk.Button(frame_menu_lateral, text="Transacciones", font=FONT_MENU, bg=COLOR_PRINCIPAL_AZUL, fg=COLOR_BLANCO,
               command=mostrar_transacciones, # Llama a la función para cargar el contenido de Transacciones
-              relief="flat", padx=10, pady=10, anchor="w").pack(fill="x", pady=5)
+               padx=10, pady=10, anchor="w").pack(fill="x", pady=5)
 
     tk.Button(frame_menu_lateral, text="Categorías", font=FONT_MENU, bg=COLOR_PRINCIPAL_AZUL, fg=COLOR_BLANCO,
               command=mostrar_categorias, # Llama a la función para cargar el contenido de Categorías
@@ -325,7 +334,7 @@ def mostrar_dashboard_contenido():
     user_email = current_user['email'] if current_user else "Usuario"
     tk.Label(frame_contenido, text=f"¡Bienvenido/a a tu Dashboard, {user_email}!", font=FONT_TITLE, bg=COLOR_FONDO_GRIS, fg=COLOR_PRINCIPAL_AZUL).pack(pady=20)
     tk.Label(frame_contenido, text="Aquí verás tus gráficos y resúmenes de finanzas.", font=FONT_NORMAL, bg=COLOR_FONDO_GRIS, fg=COLOR_TEXTO_GRIS).pack(pady=10)
-    # Aquí es donde integrarías librerías de gráficos si las tuvieras (ej. Matplotlib).
+    # Aquí es donde integraríse integran las librerías de gráficos.
     tk.Label(frame_contenido, text="(Espacio para gráficos de saldo, gastos por categoría, etc.)", font=FONT_NORMAL, bg=COLOR_FONDO_GRIS, fg=COLOR_TEXTO_GRIS).pack(pady=50)
 
 
@@ -339,16 +348,26 @@ def mostrar_transacciones():
 
     tk.Label(frame_contenido, text="Registrar y Ver Transacciones", font=FONT_TITLE, bg=COLOR_FONDO_GRIS, fg=COLOR_PRINCIPAL_AZUL).pack(pady=20)
 
-    # Frame para el formulario de nueva transacción
+    # Frame para el formulario de nueva transacción 
+    # tk.LabelFrame(): Es un widget de Tkinter que funciona como un Frame pero con un borde y
+    # un título de etiqueta que se muestra en la parte superior del borde. Es ideal para agrupar elementos de formulario.
     form_frame = tk.LabelFrame(frame_contenido, text="Nueva Transacción", font=FONT_BOLD, bg=COLOR_FONDO_GRIS, fg=COLOR_TEXTO_GRIS, padx=20, pady=10)
-    form_frame.pack(pady=10, padx=20, fill="x")
+    form_frame.pack(pady=10, padx=20, fill="x") #Hace que el LabelFrame se expanda horizontalmente 
+    # para ocupar todo el ancho disponible en su contenedor (frame_contenido)
 
+# Campos del Formulario (usando grid en form_frame) 
+# organiza los widgets en una cuadrícula de filas y columnas, ideal para formularios.
     tk.Label(form_frame, text="Descripción:", font=FONT_NORMAL, bg=COLOR_FONDO_GRIS, fg=COLOR_TEXTO_GRIS).grid(row=0, column=0, sticky="w", pady=5, padx=5)
     tk.Entry(form_frame, width=40, font=FONT_NORMAL, relief="flat", highlightbackground=COLOR_TEXTO_GRIS, highlightthickness=1).grid(row=0, column=1, pady=5, padx=5)
 
     tk.Label(form_frame, text="Monto:", font=FONT_NORMAL, bg=COLOR_FONDO_GRIS, fg=COLOR_TEXTO_GRIS).grid(row=1, column=0, sticky="w", pady=5, padx=5)
     tk.Entry(form_frame, width=40, font=FONT_NORMAL, relief="flat", highlightbackground=COLOR_TEXTO_GRIS, highlightthickness=1).grid(row=1, column=1, pady=5, padx=5)
 
+# tk.StringVar(): Crea una "variable de control" de Tkinter. 
+# Estas variables están diseñadas para interactuar directamente con widgets Tkinter 
+# (como Entry, Radiobutton, Checkbutton) y facilitar la lectura y escritura de sus valores.
+# value="Gasto": Establece el valor inicial de esta variable a "Gasto", 
+# lo que hará que el radio button "Gasto" esté seleccionado por defecto.
     tk.Label(form_frame, text="Tipo (Ingreso/Gasto):", font=FONT_NORMAL, bg=COLOR_FONDO_GRIS, fg=COLOR_TEXTO_GRIS).grid(row=2, column=0, sticky="w", pady=5, padx=5)
     tipo_transaccion_var = tk.StringVar(value="Gasto") # Valor por defecto
     ttk.Radiobutton(form_frame, text="Ingreso", variable=tipo_transaccion_var, value="Ingreso", style="TRadiobutton").grid(row=2, column=1, sticky="w")
@@ -415,48 +434,28 @@ def mostrar_perfil():
     tk.Entry(frame_contenido, width=35, font=FONT_NORMAL, relief="flat", highlightbackground=COLOR_TEXTO_GRIS, highlightthickness=1).pack()
     tk.Button(frame_contenido, text="Actualizar Perfil", font=FONT_NORMAL, bg=COLOR_VERDE_CRECIMIENTO, fg=COLOR_BLANCO, relief="flat", padx=10, pady=5).pack(pady=15)
 
-"""""
-def mostrar_home():
-    """
-    #Crea y muestra la ventana principal (Dashboard) de la aplicación.
-    #Contiene opciones para transacciones, perfil, etc.
-"""
-    global home_window # Declaramos que vamos a modificar la variable global home_window
-    home_window = tk.Toplevel(root)
-    home_window.title("Klarity - Dashboard")
-    home_window.geometry("800x600")
-    home_window.configure(bg=COLOR_FONDO_GRIS)
-    home_window.resizable(False, False)
 
-    # Usar el email del usuario logueado en el saludo
-    user_email = current_user['email'] if current_user else "Usuario" # <--- CAMBIO CLAVE AQUÍ
-    tk.Label(home_window, text=f"¡Bienvenido/a a tu Dashboard, {user_email}!", font=FONT_TITLE, bg=COLOR_FONDO_GRIS, fg=COLOR_PRINCIPAL_AZUL).pack(pady=20)
-    tk.Label(home_window, text="Aquí verás tus gráficos y resúmenes de finanzas.", font=FONT_NORMAL, bg=COLOR_FONDO_GRIS, fg=COLOR_TEXTO_GRIS).pack(pady=10)
 
-    # Contenedor para los botones principales del dashboard # <--- AÑADIR ESTE BLOQUE
-    button_frame = tk.Frame(home_window, bg=COLOR_FONDO_GRIS)
-    button_frame.pack(pady=30)
-
-    # Botones de navegación (estos comandos deberán ser funciones que crearás más adelante)
-    tk.Button(button_frame, text="Registrar Transacción", font=FONT_NORMAL, bg=COLOR_VERDE_CRECIMIENTO, fg=COLOR_BLANCO, command=lambda: messagebox.showinfo("Info", "Funcionalidad de transacción aún no implementada.", parent=home_window), relief="flat", padx=15, pady=8).grid(row=0, column=0, padx=10, pady=10)
-    tk.Button(button_frame, text="Ver Transacciones", font=FONT_NORMAL, bg=COLOR_PRINCIPAL_AZUL, fg=COLOR_BLANCO, command=lambda: messagebox.showinfo("Info", "Funcionalidad de ver transacciones aún no implementada.", parent=home_window), relief="flat", padx=15, pady=8).grid(row=0, column=1, padx=10, pady=10)
-    tk.Button(button_frame, text="Ver/Editar Perfil", font=FONT_NORMAL, bg=COLOR_PRINCIPAL_AZUL, fg=COLOR_BLANCO, command=lambda: messagebox.showinfo("Info", "Funcionalidad de perfil aún no implementada.", parent=home_window), relief="flat", padx=15, pady=8).grid(row=1, column=0, padx=10, pady=10)
-
-    # Botón para cerrar sesión
-    tk.Button(home_window, text="Cerrar Sesión", font=FONT_NORMAL, bg=COLOR_ROJO_GASTO, fg=COLOR_BLANCO, command=cerrar_sesion, relief="flat", padx=10, pady=5).pack(pady=50)
-
-    # Protocolo para manejar el cierre de la ventana con la 'X'. Termina la aplicación principal.
-    home_window.protocol("WM_DELETE_WINDOW", root.destroy)
-"""
 def mostrar_registro_window():
     """Crea y muestra la ventana de Registro de nuevo usuario con opción de mostrar/ocultar contraseña."""
     global registro_window, nombre_entry, email_registro_entry, password_registro_entry, confirm_password_entry, show_password_registro_var, show_confirm_password_registro_var
-    registro_window = tk.Toplevel(root)
+    registro_window = tk.Toplevel(root) # Crea una nueva ventana de nivel superior. 
+    #Esta es una ventana independiente que aparece "encima" de otras ventanas.
     registro_window.title("Klarity - Crear Cuenta")
-    registro_window.geometry("400x550") # Ajusta el tamaño para el Checkbutton
+    registro_window.geometry("400x750") # Ajusta el tamaño para el Checkbutton
     registro_window.configure(bg=COLOR_FONDO_GRIS)
     registro_window.resizable(False, False)
+    try:
+        imagen_original = Image.open("assets/klarity_logo.png")  # 
+        imagen_redimensionada = imagen_original.resize((80, 80))  # Ajusta el tamaño del logo
+        logo = ImageTk.PhotoImage(imagen_redimensionada)
 
+        # Creamos un Label para mostrar la imagen
+        label_logo = tk.Label(registro_window, image=logo)
+        label_logo.image = logo  # ¡Importante! Evita que la imagen sea recolectada por el recolector de basura
+        label_logo.pack(pady=10)
+    except Exception as e:
+        print(f"No se pudo cargar el logo: {e}")
     # --- Widgets de la ventana de Registro ---
     tk.Label(registro_window, text="Crear Nueva Cuenta", font=FONT_BOLD, bg=COLOR_FONDO_GRIS, fg=COLOR_PRINCIPAL_AZUL).pack(pady=(20, 10))
     
@@ -476,6 +475,9 @@ def mostrar_registro_window():
     password_registro_entry.pack()
 
     # Checkbutton para mostrar/ocultar contraseña de registro
+    # tk.BooleanVar() Crea una variable de control de Tkinter que puede contener un valor booleano (True o False). 
+    # Esta variable se vinculará al estado del Checkbutton. Cuando el Checkbutton está marcado, 
+    # el valor es True; cuando no está marcado, es False
     show_password_registro_var = tk.BooleanVar() # Variable de control para el estado del Checkbutton
     check_show_password_registro = tk.Checkbutton(registro_window, text="Mostrar Contraseña",
                                                  variable=show_password_registro_var,
@@ -517,14 +519,28 @@ def mostrar_registro_window():
 
 def mostrar_login_window():
     """Crea y muestra la ventana de Login, con opción de mostrar/ocultar contraseña y enlace a registro."""
+
     global login_window, email_entry, password_entry, show_password_login_var
     login_window = tk.Toplevel(root)
     login_window.title("Klarity - Iniciar Sesión")
-    login_window.geometry("400x380") # Ajusta el tamaño para el Checkbutton
+    login_window.geometry("400x600") # Ajusta el tamaño para el Checkbutton
     login_window.configure(bg=COLOR_FONDO_GRIS)
     login_window.resizable(False, False)
 
     # --- Widgets de la ventana de Login ---
+    # --- Cargar y mostrar la imagen del logo ---
+    try:
+        imagen_original = Image.open("assets/klarity_logo.png")  # 
+        imagen_redimensionada = imagen_original.resize((150, 150))  # Ajusta el tamaño del logo
+        logo = ImageTk.PhotoImage(imagen_redimensionada)
+
+        # Creamos un Label para mostrar la imagen
+        label_logo = tk.Label(login_window, image=logo)
+        label_logo.image = logo  # ¡Importante! Evita que la imagen sea recolectada por el recolector de basura
+        label_logo.pack(pady=10)
+    except Exception as e:
+        print(f"No se pudo cargar el logo: {e}")
+
     # Label para el título "Iniciar Sesión".
     tk.Label(login_window, text="Iniciar Sesión", font=FONT_BOLD, bg=COLOR_FONDO_GRIS, fg=COLOR_PRINCIPAL_AZUL).pack(pady=(20, 10))
     # Campo para el Email.
